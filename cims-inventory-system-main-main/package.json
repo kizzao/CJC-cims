@@ -1,0 +1,8 @@
+{
+  "name": "cims-inventory-system",
+  "version": "1.0.0",
+  "scripts": {
+    "build": "cd frontend && npm ci && npm run build",
+    "start": "cd backend && node server.js"
+  }
+}
