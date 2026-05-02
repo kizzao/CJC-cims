@@ -1,4 +1,4 @@
-// src/pages/admin/Users.tsx
+// src/components/admin/Users.tsx
 import { useState, useEffect } from 'react';
 import { 
   Plus, 
@@ -10,11 +10,13 @@ import {
   AlertCircle,
   Users as UsersIcon,
   Power,
-  PowerOff
+  PowerOff,
+  KeyRound
 } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import api from '../../utils/api';
 import AddUserModal from './AddUserModal';
+import ChangePasswordModal from './ChangePasswordModal';
 
 interface User {
   id: string;
@@ -31,6 +33,7 @@ export default function Users() {
   const { user: currentUser } = useAuthStore();
   const [users, setUsers] = useState<User[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -54,7 +57,6 @@ export default function Users() {
 
   const handleDeleteUser = async (userId: string) => {
     if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
-    
     try {
       await api.delete(`/users/${userId}`);
       setUsers(users.filter(u => u.id !== userId));
@@ -109,25 +111,29 @@ export default function Users() {
           <h1 className="text-2xl font-bold text-gray-900">User Management</h1>
           <p className="text-gray-600 mt-1">Manage clinic staff and student assistant accounts</p>
         </div>
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="flex items-center gap-2 bg-red-900 hover:bg-red-800 text-white px-4 py-2 rounded-lg transition-colors"
-        >
-          <Plus size={20} />
-          Add New User
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setIsChangePasswordOpen(true)}
+            className="flex items-center gap-2 border border-red-900 text-red-900 hover:bg-red-50 px-4 py-2 rounded-lg transition-colors"
+          >
+            <KeyRound size={20} />
+            Change Password
+          </button>
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="flex items-center gap-2 bg-red-900 hover:bg-red-800 text-white px-4 py-2 rounded-lg transition-colors"
+          >
+            <Plus size={20} />
+            Add New User
+          </button>
+        </div>
       </div>
 
       {error && (
         <div className="flex items-center gap-2 text-red-600 bg-red-50 p-4 rounded-lg">
           <AlertCircle size={20} />
           <span>{error}</span>
-          <button 
-            onClick={fetchUsers}
-            className="ml-auto text-sm underline hover:text-red-800"
-          >
-            Retry
-          </button>
+          <button onClick={fetchUsers} className="ml-auto text-sm underline hover:text-red-800">Retry</button>
         </div>
       )}
 
@@ -185,15 +191,9 @@ export default function Users() {
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                        user.isActive 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
+                        user.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                       }`}>
-                        {user.isActive ? (
-                          <><Power size={12} /> Active</>
-                        ) : (
-                          <><PowerOff size={12} /> Inactive</>
-                        )}
+                        {user.isActive ? <><Power size={12} /> Active</> : <><PowerOff size={12} /> Inactive</>}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
@@ -205,16 +205,13 @@ export default function Users() {
                           <button
                             onClick={() => handleToggleStatus(user.id)}
                             className={`p-2 rounded-lg transition-colors ${
-                              user.isActive 
-                                ? 'text-orange-600 hover:bg-orange-50' 
-                                : 'text-green-600 hover:bg-green-50'
+                              user.isActive ? 'text-orange-600 hover:bg-orange-50' : 'text-green-600 hover:bg-green-50'
                             }`}
                             title={user.isActive ? 'Deactivate user' : 'Activate user'}
                           >
                             {user.isActive ? <PowerOff size={18} /> : <Power size={18} />}
                           </button>
                         )}
-                        
                         {user.id !== currentUser?.id && (
                           <button
                             onClick={() => handleDeleteUser(user.id)}
@@ -230,14 +227,11 @@ export default function Users() {
                 ))}
               </tbody>
             </table>
-            
             {filteredUsers.length === 0 && !isLoading && (
               <div className="text-center py-12 text-gray-500">
                 <UsersIcon size={48} className="mx-auto mb-3 text-gray-300" />
                 <p className="font-medium">No users found</p>
-                <p className="text-sm mt-1">
-                  {searchTerm ? 'Try adjusting your search' : 'Get started by adding a new user'}
-                </p>
+                <p className="text-sm mt-1">{searchTerm ? 'Try adjusting your search' : 'Get started by adding a new user'}</p>
               </div>
             )}
           </>
@@ -245,13 +239,14 @@ export default function Users() {
       </div>
 
       {isModalOpen && (
-        <AddUserModal 
-          onClose={() => setIsModalOpen(false)} 
-          onUserAdded={(newUser) => {
-            setUsers([newUser, ...users]);
-            setIsModalOpen(false);
-          }}
+        <AddUserModal
+          onClose={() => setIsModalOpen(false)}
+          onUserAdded={(newUser) => { setUsers([newUser, ...users]); setIsModalOpen(false); }}
         />
+      )}
+
+      {isChangePasswordOpen && (
+        <ChangePasswordModal onClose={() => setIsChangePasswordOpen(false)} />
       )}
     </div>
   );
